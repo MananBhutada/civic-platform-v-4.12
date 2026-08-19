@@ -176,3 +176,8 @@ from wherever you deploy this.
   degrades gracefully without it.
 - **Database**: Supabase or Render PostgreSQL (PostGIS enabled).
 - **Images**: Cloudinary (free tier) — optional, only needed for photo uploads.
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+Multiple unit test done. Initially set of 82 tests were performed!
