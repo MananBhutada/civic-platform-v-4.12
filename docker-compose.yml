@@ -1,0 +1,157 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: civic-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: civic_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - civic_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d civic_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # One-off DB setup — runs db/migrate.sh (schema.sql + every
+  # migration_*.sql, in order) exactly once per `docker-compose up`.
+  # NOTE: this intentionally does NOT use /docker-entrypoint-initdb.d —
+  # Postgres runs those files in alphabetical order, which would run
+  # migration_001_*.sql before schema.sql and fail on a fresh container.
+  # Uses the postgres image itself since it already ships psql + bash;
+  # no separate image/build needed.
+  migrate:
+    image: postgis/postgis:16-3.4
+    container_name: civic-migrate
+    restart: "no"
+    volumes:
+      - ./db:/db:ro
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/civic_platform
+    entrypoint: ["bash", "/db/migrate.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: civic-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ml-service:
+    build:
+      context: ./ml-service
+    container_name: civic-ml-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/civic_platform
+      ML_MODE: demo
+      MODEL_PATH: ./models/pothole-vit
+      MODEL_VERSION: pothole-vit-mvp-1.0.0
+      IMAGE_MODEL_PATH: ./models/efficientnet_b0.pth
+      MIN_IMAGE_CLASSIFICATION_CONFIDENCE: "0.70"
+      MIN_VALID_CONFIDENCE: "0.60"
+      BLUR_VARIANCE_THRESHOLD: "80"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: civic-backend
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/civic_platform
+      JWT_SECRET: replace-with-a-long-random-string
+      JWT_EXPIRES_IN: 7d
+      ML_SERVICE_URL: http://ml-service:8000
+      ML_REQUEST_TIMEOUT_MS: "30000"
+      DUPLICATE_RADIUS_METERS: "200"
+      DUPLICATE_SIMILARITY_THRESHOLD: "0.75"
+      REDIS_URL: redis://redis:6379
+      EMAIL_MODE: console
+      EMAIL_FROM: "Civic Issue Platform <no-reply@example.com>"
+      FRONTEND_URL: http://localhost:5173
+      DASHBOARD_BASE_URL: http://localhost:5173
+      # Road-authority routing (see db/migration_007_road_authority.sql).
+      # Left blank on purpose — the app reports AUTHORITY_EMAIL_NOT_CONFIGURED
+      # rather than inventing a government address. Fill these in to see
+      # a real (console-logged) authority email during the demo.
+      NHAI_EMAIL: ""
+      DEFAULT_MUNICIPAL_EMAIL: ""
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  sla-worker:
+    build:
+      context: ./backend
+    container_name: civic-sla-worker
+    restart: unless-stopped
+    command: ["node", "src/jobs/slaEscalationJob.js"]
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/civic_platform
+      REDIS_URL: redis://redis:6379
+      EMAIL_MODE: console
+      EMAIL_FROM: "Civic Issue Platform <no-reply@example.com>"
+      FRONTEND_URL: http://localhost:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:5000/api
+        VITE_SOCKET_URL: http://localhost:5000
+    container_name: civic-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  civic_pg_data:

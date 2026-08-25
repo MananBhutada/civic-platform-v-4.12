@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* ── LIGHT MODE (default) ─────────────────────────────────── */
+:root {
+  --ink:               #1B2A4A;
+  --ink-2:             #101a30;
+  --ink-soft:          #3d4d70;
+  --paper:             #EFEDE4;
+  --paper-2:           #E4E0D2;
+  --paper-3:           #F7F5EE;
+  --seal:              #C68A1E;
+  --seal-2:            #A67214;
+  --seal-soft:         #F1DDB0;
+  --stamp-red:         #8C2F2F;
+  --stamp-red-soft:    #F0DAD5;
+  --stamp-green:       #3F6B4B;
+  --stamp-green-soft:  #DCE7DD;
+  --stamp-blue:        #2B4C7E;
+  --stamp-blue-soft:   #DCE3EE;
+  --line:              #C9C3B2;
+  --line-dark:         rgba(27,42,74,0.18);
+  --text:              #1E2430;
+  --text-soft:         #5C5F52;
+  --text-faint:        #8A8776;
+  --radius-sm:         3px;
+  --radius:            6px;
+  --radius-lg:         10px;
+  --shadow-card:       0 1px 2px rgba(27,42,74,0.06), 0 4px 14px rgba(27,42,74,0.06);
+  --shadow-pop:        0 8px 30px rgba(16,26,48,0.18);
+  --font-display:      'Fraunces', Georgia, serif;
+  --font-body:         'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:         'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+  --bg-body:           var(--paper);
+  --bg-card:           var(--paper-3);
+  --nav-bg:            var(--ink);
+  --nav-text:          #fff;
+}
+
+/* ── DARK MODE ────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --ink:               #93B4E8;
+  --ink-2:             #BDD0F5;
+  --ink-soft:          #7A9FD4;
+  --paper:             #0F1623;
+  --paper-2:           #18212F;
+  --paper-3:           #1C2840;
+  --seal:              #E8A83A;
+  --seal-2:            #F0BC5A;
+  --seal-soft:         #3A2E10;
+  --stamp-red:         #E06060;
+  --stamp-red-soft:    #3A1515;
+  --stamp-green:       #5BAD7A;
+  --stamp-green-soft:  #1A2E22;
+  --stamp-blue:        #5B8BD4;
+  --stamp-blue-soft:   #1A2840;
+  --line:              #2A3650;
+  --line-dark:         rgba(147,180,232,0.12);
+  --text:              #D8E2F5;
+  --text-soft:         #8A9FC0;
+  --text-faint:        #546480;
+  --shadow-card:       0 1px 2px rgba(0,0,0,0.3), 0 4px 14px rgba(0,0,0,0.3);
+  --shadow-pop:        0 8px 30px rgba(0,0,0,0.5);
+  --bg-body:           var(--paper);
+  --bg-card:           var(--paper-3);
+  --nav-bg:            #0A1020;
+  --nav-text:          #D8E2F5;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg-body);
+  background-image: linear-gradient(var(--line-dark) 1px, transparent 1px);
+  background-size: 100% 42px;
+  font-family: var(--font-body);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+a { color: inherit; }
+button, input, select, textarea { font-family: var(--font-body); font-size: 14px; }
+::selection { background: var(--seal-soft); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
