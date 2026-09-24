@@ -6,7 +6,7 @@ runs authenticity checks, duplicate detection, EfficientNet-B0
 classification, and the trust-score engine, then returns a single
 structured verdict the Node backend uses to approve / queue / reject
 the complaint.
-
+Rechecks needed
 This is an additive router mounted onto the existing FastAPI app in
 app/main.py via `app.include_router(image_analysis.router)` — the
 existing text-based /ml/analyze-complaint endpoint is untouched.
