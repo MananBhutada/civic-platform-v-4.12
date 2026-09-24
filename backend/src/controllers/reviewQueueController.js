@@ -90,7 +90,7 @@ const approveReviewItem = async (req, res) => {
     await db.query(
       `INSERT INTO status_history (complaint_id, status, updated_by, remarks)
        VALUES ($1, 'reported', $2, 'Approved from manual review queue')`,
-      [complaint.id, req.user.id]
+      [complaint.id, item.user_id]
     );
 
     try {

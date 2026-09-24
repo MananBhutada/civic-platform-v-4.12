@@ -167,23 +167,12 @@ router.get('/citizen/nearby',              authenticate, community.nearbyComplai
 // ── Citizen dashboard ────────────────────────────────────────────
 router.get('/citizen/dashboard', authenticate, citizen.getDashboard);
 
-// ── Officer management ────────────────────────────────────────────
-router.post('/officers',
-  authenticate, requireRole('admin','department'), officers.createOfficer);
-router.get('/officers',
-  authenticate, requireRole('admin','department','officer'), officers.listOfficers);
-router.get('/officers/:id/workload',
-  authenticate, requireRole('admin','department','officer'), officers.getWorkload);
-router.get('/officers/:id/performance',
-  authenticate, requireRole('admin','department','officer'), officers.getPerformance);
-router.put('/officers/:id/availability',
-  authenticate, requireRole('admin','department','officer'), officers.setAvailability);
-router.post('/officers/leave',
-  authenticate, requireRole('officer'), officers.requestLeave);
-router.get('/officers/leave',
-  authenticate, requireRole('admin','department','officer'), officers.listLeaves);
-router.put('/officers/leave/:id/review',
-  authenticate, requireRole('admin','department','officer'), officers.reviewLeave);
+// Officer management (create/list/workload/performance/availability) and
+// leave-approval endpoints intentionally not registered — the entire
+// officer role/dashboard and admin "Officers" page were removed as
+// out of scope for the pothole → NMC/NHAI bridge. Controller functions
+// left in officerController.js unused rather than deleted, in case
+// internal officer-workforce features come back later.
 
 // ── Audit logs (append-only, admin visibility) ───────────────────
 router.get('/admin/audit-logs', authenticate, requireRole('admin'), audit.listAuditLogs);

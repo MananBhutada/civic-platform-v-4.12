@@ -14,19 +14,13 @@ const NAV = {
       { to: '/citizen/bookmarks', label: 'Bookmarked', icon: '\u2605' },
     ]},
   ],
-  officer: [
-    { section: 'Fieldwork', links: [
-      { to: '/officer', label: 'My Workload', icon: '\u2302' },
-      { to: '/officer/leave', label: 'Leave Requests', icon: '\u2696' },
-    ]},
-  ],
+  // 'officer' nav removed — officer role dashboard fully retired
+  // (out of scope for the pothole → NMC/NHAI bridge).
   admin: [
     { section: 'Governance', links: [
       { to: '/admin', label: 'Overview', icon: '\u2302' },
       { to: '/admin/complaints', label: 'All Complaints', icon: '\u2630' },
       { to: '/admin/review-queue', label: 'Review Queue', icon: '\u26A0' },
-      { to: '/admin/officers', label: 'Officers', icon: '\u263A' },
-      { to: '/admin/leaves', label: 'Leave Requests', icon: '\u2696' },
       { to: '/admin/map', label: 'GIS Map', icon: '\u2299' },
       { to: '/admin/analytics', label: 'Analytics', icon: '\u2637' },
       { to: '/admin/audit', label: 'Audit Log', icon: '\u2637' },
@@ -38,8 +32,6 @@ const NAV = {
       { to: '/admin', label: 'Overview', icon: '\u2302' },
       { to: '/admin/complaints', label: 'All Complaints', icon: '\u2630' },
       { to: '/admin/review-queue', label: 'Review Queue', icon: '\u26A0' },
-      { to: '/admin/officers', label: 'Officers', icon: '\u263A' },
-      { to: '/admin/leaves', label: 'Leave Requests', icon: '\u2696' },
       { to: '/admin/map', label: 'GIS Map', icon: '\u2299' },
       { to: '/admin/analytics', label: 'Analytics', icon: '\u2637' },
       { to: '/admin/search', label: 'Global Search', icon: '\u2315' },

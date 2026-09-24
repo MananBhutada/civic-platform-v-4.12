@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AppShell } from '../../components/AppShell';
 import {
-  complaintsApi, communityApi, evidenceApi, uploadApi, adminApi, officersApi, apiError,
+  complaintsApi, communityApi, evidenceApi, uploadApi, adminApi, apiError,
 } from '../../api/client';
 import { Loader, StatusStamp, PriorityChip, timeAgo, STATUS_LABELS } from '../../components/Common';
 import { categoryLabel } from '../../utils/constants';
@@ -425,20 +425,12 @@ function OfficerActions({ complaint, isAssignedOfficer, onChanged, toast }) {
 function AdminActions({ complaint, onChanged, toast }) {
   const [busy, setBusy] = useState(false);
   const [departments, setDepartments] = useState([]);
-  const [officers, setOfficers] = useState([]);
   const [deptId, setDeptId] = useState('');
-  const [officerId, setOfficerId] = useState('');
   const [remarks, setRemarks] = useState('');
 
   useEffect(() => {
     adminApi.departments().then(({ data }) => setDepartments(data || [])).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (complaint.assigned_department_id) {
-      officersApi.list({ department_id: complaint.assigned_department_id }).then(({ data }) => setOfficers(data.officers || [])).catch(() => {});
-    }
-  }, [complaint.assigned_department_id]);
 
   const assignDept = async () => {
     if (!deptId) return;
@@ -449,17 +441,6 @@ function AdminActions({ complaint, onChanged, toast }) {
       onChanged();
     } catch (err) {
       toast.error(apiError(err));
-    } finally { setBusy(false); }
-  };
-
-  const assignOff = async () => {
-    setBusy(true);
-    try {
-      await complaintsApi.assignOfficer(complaint.id, officerId ? { officer_id: officerId } : {});
-      toast.success('Officer assigned.');
-      onChanged();
-    } catch (err) {
-      toast.error(apiError(err, 'Could not assign an officer.'));
     } finally { setBusy(false); }
   };
 
@@ -488,28 +469,6 @@ function AdminActions({ complaint, onChanged, toast }) {
             {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
           <button className="btn btn-seal btn-sm" style={{ marginTop: 8 }} disabled={busy || !deptId} onClick={assignDept}>Assign department</button>
-        </div>
-      )}
-
-      {complaint.assigned_department_id && !complaint.assigned_officer_id && (
-        <div className="field">
-          <label>Assign officer</label>
-          <select value={officerId} onChange={(e) => setOfficerId(e.target.value)}>
-            <option value="">Auto-assign least-loaded officer</option>
-            {officers.map((o) => <option key={o.id} value={o.id}>{o.name} ({o.active_complaints} active)</option>)}
-          </select>
-          <button className="btn btn-seal btn-sm" style={{ marginTop: 8 }} disabled={busy} onClick={assignOff}>Assign officer</button>
-        </div>
-      )}
-
-      {complaint.assigned_officer_id && complaint.assigned_department_id && (
-        <div className="field">
-          <label>Reassign to a different officer</label>
-          <select value={officerId} onChange={(e) => setOfficerId(e.target.value)}>
-            <option value="">Select officer…</option>
-            {officers.filter((o) => o.id !== complaint.assigned_officer_id).map((o) => <option key={o.id} value={o.id}>{o.name} ({o.active_complaints} active)</option>)}
-          </select>
-          <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} disabled={busy || !officerId} onClick={assignOff}>Reassign</button>
         </div>
       )}
 

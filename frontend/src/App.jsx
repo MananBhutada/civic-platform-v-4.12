@@ -20,14 +20,11 @@ import Nearby           from './pages/citizen/Nearby';
 import Bookmarks        from './pages/citizen/Bookmarks';
 import ComplaintDetail  from './pages/citizen/ComplaintDetail';
 
-import OfficerDashboard from './pages/officer/OfficerDashboard';
-import LeaveRequests    from './pages/officer/LeaveRequests';
-
+// Officer/Leave-approval features fully removed — out of scope for
+// the pothole → NMC/NHAI bridge (pages and backend routes deleted).
 import AdminDashboard   from './pages/admin/AdminDashboard';
 import AllComplaints    from './pages/admin/AllComplaints';
 import ReviewQueue      from './pages/admin/ReviewQueue';
-import Officers         from './pages/admin/Officers';
-import LeaveReview      from './pages/admin/LeaveReview';
 import GeoMap           from './pages/admin/GeoMap';
 import Analytics        from './pages/admin/Analytics';
 import AuditLog         from './pages/admin/AuditLog';
@@ -100,12 +97,9 @@ export default function App() {
                 <Route path="/citizen/complaints/:id"   element={<ComplaintDetail />} />
               </Route>
 
-              {/* ── Officer ──────────────────────────────── */}
-              <Route element={<ProtectedRoute roles={['officer']} />}>
-                <Route path="/officer"                  element={<OfficerDashboard />} />
-                <Route path="/officer/leave"            element={<LeaveRequests />} />
-                <Route path="/officer/complaints/:id"   element={<ComplaintDetail />} />
-              </Route>
+              {/* Officer role/dashboard removed — out of scope for the
+                  pothole → NMC/NHAI bridge (see git history for prior
+                  OfficerDashboard.jsx / LeaveRequests.jsx). */}
 
               {/* ── Admin / Department ───────────────────── */}
               <Route element={<ProtectedRoute roles={['admin','department']} />}>
@@ -113,8 +107,6 @@ export default function App() {
                 <Route path="/admin/complaints"         element={<AllComplaints />} />
                 <Route path="/admin/review-queue"       element={<ReviewQueue />} />
                 <Route path="/admin/complaints/:id"     element={<ComplaintDetail />} />
-                <Route path="/admin/officers"           element={<Officers />} />
-                <Route path="/admin/leaves"             element={<LeaveReview />} />
                 <Route path="/admin/map"                element={<GeoMap />} />
                 <Route path="/admin/analytics"          element={<Analytics />} />
                 <Route path="/admin/audit"              element={<AuditLog />} />

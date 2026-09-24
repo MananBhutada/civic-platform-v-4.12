@@ -17,8 +17,7 @@ imagehash==4.3.1
 python-multipart==0.0.9
 psycopg2-binary==2.9.9
 
-# Only required when ML_MODE=trained (see app/services/classifier.py).
-# In ML_MODE=demo (default) these are not imported and don't need to
-# be installed, which keeps local/demo setup lightweight.
-torch==2.3.0
-torchvision==0.18.0
+# torch / torchvision are only needed when ML_MODE=trained (needs a checkpoint
+# in models/). Left out to keep the image small; add back for trained mode:
+# torch==2.3.0
+# torchvision==0.18.0

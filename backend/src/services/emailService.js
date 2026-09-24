@@ -17,6 +17,57 @@ if (EMAIL_MODE === 'console') {
       return { accepted: [mailOptions.to || (Array.isArray(mailOptions.to) ? mailOptions.to.join(', ') : undefined)].filter(Boolean) };
     },
   };
+} else if (EMAIL_MODE === 'brevo') {
+  // ── HTTPS transactional API (Brevo) ────────────────────────
+  // Use this on hosts that block outbound SMTP (e.g. Render's free tier
+  // blocks ports 25/465/587). Plain HTTPS on 443 is not blocked.
+  // Needs: BREVO_API_KEY, and a sender address verified in Brevo
+  // (BREVO_SENDER_EMAIL, or the address found in EMAIL_FROM).
+  const axios = require('axios');
+  const BREVO_URL = process.env.BREVO_API_URL || 'https://api.brevo.com/v3';
+  const brevoHeaders = () => ({
+    'api-key': process.env.BREVO_API_KEY || '',
+    'content-type': 'application/json',
+    accept: 'application/json',
+  });
+
+  // Accepts "Name <a@b.com>", "Name a@b.com", or just "a@b.com".
+  const parseAddress = (raw) => {
+    const str = String(raw || '');
+    const m = str.match(/[^\s<>"',;]+@[^\s<>"',;]+/);
+    const email = m ? m[0] : '';
+    const name = str.replace(email, '').replace(/[<>"']/g, '').trim();
+    return { email, name };
+  };
+
+  transporter = {
+    verify: (cb) => {
+      if (!process.env.BREVO_API_KEY) return cb(new Error('BREVO_API_KEY is not set'));
+      axios.get(`${BREVO_URL}/account`, { headers: brevoHeaders(), timeout: 10000 })
+        .then(() => cb(null))
+        .catch((e) => cb(new Error(e.response?.data?.message || e.message)));
+    },
+    sendMail: async (mailOptions) => {
+      const from = parseAddress(process.env.BREVO_SENDER_EMAIL || mailOptions.from);
+      const fromName = parseAddress(mailOptions.from).name || 'Civic Issue Platform';
+      const recipients = (Array.isArray(mailOptions.to) ? mailOptions.to : String(mailOptions.to || '').split(','))
+        .map((t) => parseAddress(t).email)
+        .filter(Boolean)
+        .map((email) => ({ email }));
+      if (!recipients.length) throw new Error('Email has no valid recipient');
+      try {
+        const res = await axios.post(`${BREVO_URL}/smtp/email`, {
+          sender: { name: fromName, email: from.email },
+          to: recipients,
+          subject: mailOptions.subject,
+          htmlContent: mailOptions.html,
+        }, { headers: brevoHeaders(), timeout: 15000 });
+        return { accepted: recipients.map((r) => r.email), messageId: res.data?.messageId };
+      } catch (e) {
+        throw new Error(`Brevo send failed: ${e.response?.data?.message || e.message}`);
+      }
+    },
+  };
 } else {
   transporter = nodemailer.createTransport({
     host:   'smtp.gmail.com',

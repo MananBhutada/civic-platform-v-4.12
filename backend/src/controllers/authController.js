@@ -12,7 +12,7 @@ const registerRules = [
   body('email').isEmail().normalizeEmail(),
   body('phone').optional().isMobilePhone(),
   body('password').isLength({ min: 6 }).withMessage('Password min 6 chars'),
-  body('role').optional().isIn(['citizen', 'admin', 'department']),
+  body('role').optional().isIn(['citizen']), // public signup is citizen-only; promote admins/officers via SQL or an admin-only endpoint
 ];
 
 const loginRules = [
@@ -100,7 +100,8 @@ const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
 
-  const { name, email, phone, password, role = 'citizen', city, ward, city_id, ward_id } = req.body;
+  const { name, email, phone, password, city, ward, city_id, ward_id } = req.body;
+  const role = 'citizen'; // never trust a client-supplied role on public registration
 
   try {
     const existing = await db.query(
