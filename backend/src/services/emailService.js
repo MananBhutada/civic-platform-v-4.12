@@ -17,6 +17,58 @@ if (EMAIL_MODE === 'console') {
       return { accepted: [mailOptions.to || (Array.isArray(mailOptions.to) ? mailOptions.to.join(', ') : undefined)].filter(Boolean) };
     },
   };
+} else if (EMAIL_MODE === 'resend') {
+  // ── HTTPS transactional API (Resend) ───────────────────────
+  // Use this on hosts that block outbound SMTP (e.g. Render's free tier
+  // blocks ports 25/465/587). Plain HTTPS on 443 is not blocked.
+  // Needs: RESEND_API_KEY, and RESEND_FROM_EMAIL (or EMAIL_FROM), which
+  // must be onboarding@resend.dev unless a custom domain is verified.
+  const axios = require('axios');
+  const RESEND_URL = process.env.RESEND_API_URL || 'https://api.resend.com';
+
+  const parseAddress = (raw) => {
+    const str = String(raw || '');
+    const m = str.match(/[^\s<>"',;]+@[^\s<>"',;]+/);
+    const email = m ? m[0] : '';
+    const name = str.replace(email, '').replace(/[<>"']/g, '').trim();
+    return { email, name };
+  };
+
+  transporter = {
+    verify: (cb) => {
+      if (!process.env.RESEND_API_KEY) return cb(new Error('RESEND_API_KEY is not set'));
+      axios.get(`${RESEND_URL}/domains`, {
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+        timeout: 10000,
+      }).then(() => cb(null)).catch((e) => cb(new Error(e.response?.data?.message || e.message)));
+    },
+    sendMail: async (mailOptions) => {
+      const fromRaw = process.env.RESEND_FROM_EMAIL || mailOptions.from;
+      const from = parseAddress(fromRaw);
+      const fromName = parseAddress(mailOptions.from).name || 'Civic Issue Platform';
+      const recipients = (Array.isArray(mailOptions.to) ? mailOptions.to : String(mailOptions.to || '').split(','))
+        .map((t) => parseAddress(t).email)
+        .filter(Boolean);
+      if (!recipients.length) throw new Error('Email has no valid recipient');
+      try {
+        const res = await axios.post(`${RESEND_URL}/emails`, {
+          from: `${fromName} <${from.email}>`,
+          to: recipients,
+          subject: mailOptions.subject,
+          html: mailOptions.html,
+        }, {
+          headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            'content-type': 'application/json',
+          },
+          timeout: 15000,
+        });
+        return { accepted: recipients, messageId: res.data?.id };
+      } catch (e) {
+        throw new Error(`Resend send failed: ${e.response?.data?.message || e.message}`);
+      }
+    },
+  };
 } else if (EMAIL_MODE === 'brevo') {
   // ── HTTPS transactional API (Brevo) ────────────────────────
   // Use this on hosts that block outbound SMTP (e.g. Render's free tier
